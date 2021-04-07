@@ -4,8 +4,7 @@ self:
 
 with lib;
 
-let
-  cfg = config.services.appsmith;
+let cfg = config.services.appsmith;
 in {
   options = {
     services.appsmith = {
@@ -23,52 +22,121 @@ in {
         type = types.package;
         default = self.packages.x86_64-linux.appsmith-editor;
       };
-    };
-  };
 
-  config = mkIf cfg.enable {
-    services.nginx = {
-      enable = true;
-      virtualHosts = {
-        "localhost" = {
-          locations = let
-            commonServerConfig = {
-              extraConfig = ''
-                proxy_set_header X-Forwarded-Proto $scheme;
-                proxy_set_header X-Forwarded-Host $host;
-              '';
-              proxyPass = "http://localhost:8080";
-            };
-          in {
-            "/" = {
-              root = "${cfg.clientPackage}";
-              tryFiles = "$uri $uri/ /index.html";
-            };
+      pluginsDir = mkOption {
+        type = types.str;
+        default = "${cfg.serverPackage}/share/java/plugins";
+      };
 
-            "/api" = commonServerConfig;
-            "/oauth2" = commonServerConfig;
-            "/login" = commonServerConfig;
-          };
+      hostname = mkOption {
+        type = types.str;
+        default = "localhost";
+      };
+
+      forceSSL = mkOption {
+        type = types.bool;
+        default = false;
+      };
+
+      encryption = {
+        salt = mkOption {
+          type = types.str;
+          description = ''
+            Encryption Salt for Appsmith
+          '';
+        };
+
+        password = mkOption {
+          type = types.str;
+          description = ''
+            Encryption Password for Appsmith
+          '';
+        };
+      };
+
+      redis = {
+        local = mkOption {
+          type = types.bool;
+          default = true;
+          description = ''
+            Enable local redis
+          '';
+        };
+
+        url = mkOption {
+          type = types.str;
+          default = "redis://localhost:6379";
+          description = ''
+            Redis url
+          '';
+        };
+      };
+
+      mongodb = {
+        local = mkOption {
+          type = types.bool;
+          default = true;
+          description = ''
+            Enable local mongodb
+          '';
+        };
+
+        url = mkOption {
+          type = types.str;
+          default = "mongodb://localhost/appsmith?retryWrites=true";
+          description = ''
+            Mongodb url
+          '';
         };
       };
     };
+  };
 
-    services.mongodb.enable = true;
-    services.redis.enable = true;
+  config = mkMerge [
+    (mkIf cfg.redis.local { services.redis.enable = true; })
+    (mkIf cfg.mongodb.local { services.mongodb.enable = true; })
+    (mkIf cfg.enable {
+      services.nginx = {
+        enable = true;
+        virtualHosts = {
+          "${cfg.hostname}" = {
+            inherit (cfg) forceSSL;
+            locations = let
+              commonServerConfig = {
+                extraConfig = ''
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_set_header X-Forwarded-Host $host;
+                '';
+                proxyPass = "http://localhost:8080";
+              };
+            in {
+              "/" = {
+                root = "${cfg.clientPackage}";
+                tryFiles = "$uri $uri/ /index.html";
+              };
 
-    systemd.services.appsmith-server = {
-      wantedBy = [ "multi-user.target" ];
-      after = [ "network.target" ];
-
-      environment = {
-        APPSMITH_REDIS_URL = "redis://localhost:6379";
-        APPSMITH_MONGODB_URI = "mongodb://localhost/appsmith?retryWrites=true";
-        APPSMITH_ENCRYPTION_PASSWORD = "TestPassword";
-        APPSMITH_ENCRYPTION_SALT = "TestSalt";
-        APPSMITH_PLUGINS_DIR = "${cfg.serverPackage}/share/java/plugins";
+              "/api" = commonServerConfig;
+              "/oauth2" = commonServerConfig;
+              "/login" = commonServerConfig;
+            };
+          };
+        };
       };
 
-      script = "${cfg.serverPackage}/bin/appsmith-server";
-    };
-  };
+      systemd.services.appsmith-server = {
+        wantedBy = [ "multi-user.target" ];
+        after = [ "network.target" ];
+
+        environment = {
+          APPSMITH_REDIS_URL = "${cfg.redis.url}";
+          APPSMITH_MONGODB_URI = "${cfg.mongodb.url}";
+          APPSMITH_ENCRYPTION_PASSWORD = "${cfg.encryption.password}";
+          APPSMITH_ENCRYPTION_SALT = "${cfg.encryption.salt}";
+          APPSMITH_PLUGINS_DIR = "${cfg.pluginsDir}";
+        };
+
+        script = "${cfg.serverPackage}/bin/appsmith-server";
+      };
+    })
+  ];
 }

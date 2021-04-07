@@ -7,7 +7,13 @@ in {
       imports = [ appsmithModule ];
       boot.tmpOnTmpfs = true;
 
-      services.appsmith.enable = true;
+      services.appsmith = {
+        enable = true;
+        encryption = {
+          salt = "TestSalt";
+          password = "TestPassword";
+        };
+      };
     };
     service.useHostStore = true;
     service.ports = [
