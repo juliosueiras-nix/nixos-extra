@@ -16,7 +16,7 @@ in {
 
       package = mkOption {
         type = types.package;
-        default = self.packages.x86_64-linux.valheim-server;
+        default = self.packages.${builtins.currentSystem}.valheim-server;
       };
 
       password = mkOption {

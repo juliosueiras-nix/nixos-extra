@@ -15,12 +15,12 @@ in {
 
       serverPackage = mkOption {
         type = types.package;
-        default = self.packages.x86_64-linux.appsmith-server;
+        default = self.packages.${builtins.currentSystem}.appsmith-server;
       };
 
       clientPackage = mkOption {
         type = types.package;
-        default = self.packages.x86_64-linux.appsmith-editor;
+        default = self.packages.${builtins.currentSystem}.appsmith-editor;
       };
 
       pluginsDir = mkOption {
