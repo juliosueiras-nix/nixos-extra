@@ -125,7 +125,7 @@ in {
 
       systemd.services.appsmith-server = {
         wantedBy = [ "multi-user.target" ];
-        after = [ "network.target" ];
+        after = [ "network.target" ] ++ (mkIf cfg.mongodb.local [ "mongodb.service") ++ (mkIf cfg.redis.local [ "redis.service");
 
         environment = {
           APPSMITH_REDIS_URL = "${cfg.redis.url}";
