@@ -14,5 +14,13 @@
     packages.x86_64-linux = pkgs.callPackage ./pkgs/top-level.nix {};
 
     nixosModules = import ./modules/top-level.nix self;
+
+    devShell.x86_64-linux = pkgs.mkShell {
+      NIX_PATH = "nixpkgs=${nixpkgs}";
+
+      buildInputs = [
+        pkgs.arion
+      ];
+    };
   };
 }

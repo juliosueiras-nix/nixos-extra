@@ -1,0 +1,20 @@
+diff --git a/app/server/appsmith-server/src/main/java/com/appsmith/server/configurations/PluginConfiguration.java b/app/server/appsmith-server/src/main/java/com/appsmith/server/configurations/PluginConfiguration.java
+index 0e25a2375..1e874a1cb 100644
+--- a/app/server/appsmith-server/src/main/java/com/appsmith/server/configurations/PluginConfiguration.java
++++ b/app/server/appsmith-server/src/main/java/com/appsmith/server/configurations/PluginConfiguration.java
+@@ -3,13 +3,14 @@ package com.appsmith.server.configurations;
+ import org.pf4j.spring.SpringPluginManager;
+ import org.springframework.context.annotation.Bean;
+ import org.springframework.context.annotation.Configuration;
++import java.nio.file.Paths;
+ 
+ @Configuration
+ public class PluginConfiguration {
+ 
+     @Bean
+     public SpringPluginManager pluginManager() {
+-        return new SpringPluginManager();
++        return new SpringPluginManager(Paths.get(System.getenv("APPSMITH_PLUGINS_DIR")));
+     }
+ 
+ }
