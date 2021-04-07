@@ -93,8 +93,8 @@ in {
   };
 
   config = mkMerge [
-    (mkIf cfg.redis.local { services.redis.enable = true; })
-    (mkIf cfg.mongodb.local { services.mongodb.enable = true; })
+    (mkIf (cfg.enable && cfg.redis.local) { services.redis.enable = true; })
+    (mkIf (cfg.enable && cfg.mongodb.local) { services.mongodb.enable = true; })
     (mkIf cfg.enable {
       services.nginx = {
         enable = true;
