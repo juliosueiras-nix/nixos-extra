@@ -18,7 +18,7 @@
         devShell = pkgs.mkShell {
           NIX_PATH = "nixpkgs=${nixpkgs}";
 
-          buildInputs = [ pkgs.arion ];
+          buildInputs = [ pkgs.arion pkgs.maven pkgs.jdk11_headless ];
         };
       }) // ({
         nixosModules = import ./modules/top-level.nix self;
